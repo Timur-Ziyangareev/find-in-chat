@@ -53,6 +53,7 @@
           'panel.jumping': 'Opening message…',
           'panel.keyHint': '↑↓ navigate · Enter jump · Esc close',
           'filter.label': 'Filter by author',
+          'filter.all': 'All',
           'kind.user': 'You',
           'kind.assistant': 'Assistant',
           'turn': 'Turn {n}',
@@ -77,6 +78,7 @@
           'panel.jumping': 'Открываю сообщение…',
           'panel.keyHint': '↑↓ выбор · Enter перейти · Esc закрыть',
           'filter.label': 'Фильтр по автору',
+          'filter.all': 'Все',
           'kind.user': 'Вы',
           'kind.assistant': 'Ассистент',
           'turn': 'Ход {n}',
@@ -101,6 +103,7 @@
           'panel.jumping': '正在打开消息…',
           'panel.keyHint': '↑↓ 选择 · Enter 跳转 · Esc 关闭',
           'filter.label': '按作者筛选',
+          'filter.all': '全部',
           'kind.user': '你',
           'kind.assistant': '助手',
           'turn': '第 {n} 轮',
@@ -166,13 +169,13 @@
         '.fic-icon-button:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
         '.fic-search{display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0 10px;height:34px;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-tertiary)}',
         '.fic-search:focus-within{border-color:var(--dsw-alias-state-business-primary)}',
-        '.fic-filters{display:flex;align-items:center;gap:6px;padding:0 12px 8px}',
-        '.fic-chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:.5px solid var(--dsw-alias-border-l2);border-radius:999px;background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;line-height:16px;cursor:pointer}',
-        '.fic-chip:hover{background:var(--dsw-alias-interactive-bg-hover)}',
-        '.fic-chip[aria-pressed="true"]{border-color:var(--dsw-alias-border-l3);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
-        '.fic-chip:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}',
+        '.fic-segments{display:inline-flex;align-items:center;gap:2px;align-self:flex-start;margin:0 12px 8px;padding:3px;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover)}',
+        '.fic-segment{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;line-height:16px;white-space:nowrap;cursor:pointer}',
+        '.fic-segment:hover{color:var(--dsw-alias-label-primary)}',
+        '.fic-segment[aria-checked="true"]{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);box-shadow:var(--dsw-elevation-soft)}',
+        '.fic-segment:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}',
         '.fic-chip-dot{width:5px;height:5px;border-radius:50%;flex:none}',
-        '.fic-chip[aria-pressed="false"] .fic-chip-dot{opacity:.35}',
+        '.fic-segment[aria-checked="false"] .fic-chip-dot{opacity:.35}',
         '.fic-input{flex:1;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:14px;line-height:20px}',
         '.fic-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
         '.fic-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px 6px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}',
@@ -414,6 +417,13 @@
         });
       }
 
+      /** Map the three-way author selector to the Host's kinds list. */
+      function kindsForAuthor(author) {
+        if (author === 'user') return ['user'];
+        if (author === 'assistant') return ['assistant'];
+        return ['user', 'assistant'];
+      }
+
       function formatTime(value) {
         try {
           var date = new Date(value);
@@ -496,9 +506,9 @@
           var notice = noticeState[0];
           var setNotice = noticeState[1];
 
-          var kindsState = React.useState(['user', 'assistant']);
-          var kinds = kindsState[0];
-          var setKinds = kindsState[1];
+          var authorState = React.useState('all');
+          var author = authorState[0];
+          var setAuthor = authorState[1];
 
           var spotState = React.useState(null);
           var spot = spotState[0];
@@ -562,18 +572,6 @@
             else openPanel();
           }
 
-          function toggleKind(kind) {
-            setKinds(function (current) {
-              var next = current.indexOf(kind) >= 0
-                ? current.filter(function (value) { return value !== kind; })
-                : current.concat(kind);
-              // One author must stay selected; clicking the last active chip
-              // is a no-op instead of an empty result list with no way back.
-              if (next.length === 0) return current;
-              return ['user', 'assistant'].filter(function (value) { return next.indexOf(value) >= 0; });
-            });
-          }
-
           React.useEffect(function () {
             if (!open) return;
             return function () {
@@ -626,7 +624,7 @@
             var current = true;
             var timer = window.setTimeout(function () {
               var url = '/find-in-chat/search?sessionId=' + encodeURIComponent(sessionId)
-                + '&kinds=' + encodeURIComponent(kinds.join(','))
+                + '&kinds=' + encodeURIComponent(kindsForAuthor(author).join(','))
                 + '&q=' + encodeURIComponent(text);
               var options = { headers: { accept: 'application/json' } };
               if (controller) options.signal = controller.signal;
@@ -659,7 +657,7 @@
               window.clearTimeout(timer);
               if (controller) controller.abort();
             };
-          }, [open, query, sessionId, kinds.join(',')]);
+          }, [open, query, sessionId, author]);
 
           // Panel geometry follows the header control.
           React.useLayoutEffect(function () {
@@ -857,26 +855,31 @@
             ]);
           }
 
-          function kindFilters() {
-            function chip(kind) {
-              var on = kinds.indexOf(kind) >= 0;
-              return h('button', {
-                key: kind,
-                type: 'button',
-                className: 'fic-chip',
-                'aria-pressed': on ? 'true' : 'false',
-                onClick: function () { toggleKind(kind); }
-              }, [
-                h('span', { className: 'fic-chip-dot fic-dot-' + kind, key: 'dot' }),
-                h('span', { key: 'label' }, copy('kind.' + kind))
-              ]);
-            }
+          function authorFilter() {
+            var options = [
+              { id: 'all', label: copy('filter.all') },
+              { id: 'user', label: copy('kind.user'), dot: 'user' },
+              { id: 'assistant', label: copy('kind.assistant'), dot: 'assistant' }
+            ];
             return h('div', {
-              className: 'fic-filters',
+              className: 'fic-segments',
               key: 'filters',
-              role: 'group',
+              role: 'radiogroup',
               'aria-label': copy('filter.label')
-            }, [chip('user'), chip('assistant')]);
+            }, options.map(function (option) {
+              var checked = author === option.id;
+              return h('button', {
+                key: option.id,
+                type: 'button',
+                role: 'radio',
+                className: 'fic-segment',
+                'aria-checked': checked ? 'true' : 'false',
+                onClick: function () { setAuthor(option.id); }
+              }, [
+                option.dot ? h('span', { className: 'fic-chip-dot fic-dot-' + option.dot, key: 'dot' }) : null,
+                h('span', { key: 'label' }, option.label)
+              ]);
+            }));
           }
 
           function rowNode(hit, index) {
@@ -954,9 +957,8 @@
                   onKeyDown: onInputKeyDown
                 })
               ]),
-              kindFilters(),
-              metaLine(),
-              notice ? h('div', { className: 'fic-notice', key: 'notice' }, notice) : null,
+              authorFilter(),
+              metaLine(),              notice ? h('div', { className: 'fic-notice', key: 'notice' }, notice) : null,
               h('div', { className: 'fic-list', key: 'list', ref: listRef, role: 'listbox', 'aria-label': copy('panel.title') },
                 result.status === 'ready' && result.hits.length > 0
                   ? result.hits.map(rowNode)
@@ -1020,3 +1022,4 @@
     }
   });
 })();
+
