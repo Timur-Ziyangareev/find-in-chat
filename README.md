@@ -11,6 +11,7 @@ A search control in the conversation header. It searches the **whole open sessio
 - One magnifier button in the conversation header, next to the Session utilities.
 - Literal, case-insensitive search; whitespace in the query matches any whitespace run, so `lu box` finds `lu\nbox`.
 - Results are one row per occurrence, newest first, with the message kind, Turn, time, and a two-line preview around the match.
+- Two filter pills, **You** and **Assistant**, are both enabled by default. The Host applies them before the 500-hit cap, so hiding one author never hides matches from the other.
 - `↑` / `↓` move through the list, `Enter` opens the active match, a click opens any row.
 - The Chat is asked to load the missing history window before the jump, so matches in old Turns work too.
 - The matched text is highlighted with the CSS Custom Highlight API, and a short-lived ring marks the exact spot (it stays visible even inside inline code, where a highlight would sit under the code background).
@@ -84,6 +85,7 @@ MIT
 - Кнопка с лупой в шапке чата, рядом с остальными действиями сессии.
 - Поиск буквальный, без учёта регистра; пробелы в запросе совпадают с любым набором пробельных символов, поэтому `lu box` находит `lu\nbox`.
 - Каждая строка списка — одно совпадение, сначала самые новые; видны тип сообщения, ход, время и две строки контекста вокруг найденного текста.
+- Две «пилюли» фильтра — **Вы** и **Ассистент**, обе включены по умолчанию. Host применяет их до лимита в 500 совпадений, поэтому скрытие одного автора не прячет совпадения другого.
 - `↑` / `↓` листают список, `Enter` открывает выбранное совпадение, клик открывает любую строку.
 - Перед переходом Chat догружает недостающую часть истории, поэтому работают и совпадения в старых ходах.
 - Найденный текст подсвечивается через CSS Custom Highlight, а точное место на короткое время обводится рамкой — её видно даже внутри inline-кода, где обычная подсветка уходит под фон плашки.
@@ -157,6 +159,7 @@ MIT
 - 会话标题栏中的一个放大镜按钮，位于会话操作区。
 - 字面匹配、不区分大小写；查询中的空白可匹配任意空白，因此 `lu box` 能找到 `lu\nbox`。
 - 列表每一行是一个匹配项，最新的在前，显示消息类型、轮次、时间和匹配处周围的两行预览。
+- 两个筛选标签 **你** 和 **助手**，默认都勾选。Host 在 500 条上限之前应用筛选，因此关闭一个作者不会隐藏另一个作者的匹配。
 - `↑` / `↓` 在列表中移动，`Enter` 打开当前匹配项，点击任意行也可以打开。
 - 跳转前会让 Chat 加载缺失的历史窗口，因此旧轮次中的匹配也能打开。
 - 匹配文本用 CSS Custom Highlight 标出，并用一个短暂的圆角框圈出准确位置——即使匹配位于行内代码中，高亮会被代码底色盖住，圆角框仍然可见。
