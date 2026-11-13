@@ -27,7 +27,7 @@ Only text the user can see as an ordinary Chat row:
 
 Reasoning, tool calls and tool outputs, injected context, system prompts, and compaction checkpoints are not searched. This keeps every result addressable in the Chat and avoids turning a short query into hundreds of tool-output fragments.
 
-The Host reads the Session through `ctx.sessionQuery.readSurface()`, so replaced and shadowed log records are skipped and the result set matches the visible conversation. One parsed document list is cached per Session and rebuilt when the live log grows.
+The Host reads the complete live log through `ctx.sessionQuery.readSession()` and asks `listEvents()` which records are still on the current surface, so replaced and shadowed messages are skipped while Turn and Step boundaries remain available. One parsed document list is cached per Session and rebuilt when the live log grows.
 
 ## Install
 
@@ -100,7 +100,7 @@ MIT
 
 Рассуждения, вызовы и результаты инструментов, внедрённый контекст, системные промпты и точки компакции не ищутся. Так каждый результат можно показать в чате, а короткий запрос не превращается в сотни фрагментов вывода инструментов.
 
-Host читает сессию через `ctx.sessionQuery.readSurface()`, поэтому заменённые и скрытые записи журнала пропускаются, а выдача совпадает с видимой перепиской. Разобранный список документов кэшируется на сессию и перестраивается, когда журнал растёт.
+Host читает полный живой журнал через `ctx.sessionQuery.readSession()` и запрашивает у `listEvents()`, какие записи ещё находятся на текущей поверхности. Поэтому заменённые и скрытые сообщения пропускаются, а границы ходов и шагов остаются доступны. Разобранный список документов кэшируется на сессию и перестраивается, когда журнал растёт.
 
 ### Установка
 
@@ -173,7 +173,7 @@ MIT
 
 推理内容、工具调用与工具输出、注入的上下文、系统提示和压缩检查点不参与搜索。这样每个结果都能在 Chat 中定位，短查询也不会变成数百条工具输出片段。
 
-Host 通过 `ctx.sessionQuery.readSurface()` 读取会话，因此被替换或隐藏的日志记录会被跳过，结果与可见对话一致。每个会话缓存一份解析后的文档列表，日志增长时重建。
+Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并用 `listEvents()` 确认哪些记录仍在当前表面上。因此被替换或隐藏的消息会被跳过，同时保留轮次和步骤边界。每个会话缓存一份解析后的文档列表，日志增长时重建。
 
 ### 安装
 
