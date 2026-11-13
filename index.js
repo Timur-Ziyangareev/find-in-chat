@@ -59,24 +59,19 @@ async function documentsFor(ctx, sessionId) {
     if (seq === null && Date.now() - cached.at < DOCUMENT_CACHE_TTL_MS) return cached.documents
   }
 
-  const [surface, records] = await Promise.all([
-    ctx.sessionQuery.readSurface(sessionId),
+  const [loaded, records] = await Promise.all([
+    ctx.sessionQuery.readSession(sessionId),
     ctx.sessionQuery.listEvents(sessionId),
   ])
-  const coordinates = new Map()
-  let turn = 0
-  let step = 0
+  const current = new Set()
   for (const record of records) {
-    if (record.type === 'turn/start') {
-      turn += 1
-      step = 0
-    } else if (record.type === 'step/start') {
-      step += 1
-    }
-    coordinates.set(record.seq, { turn, step })
+    if (record.surface === 'current') current.add(record.seq)
   }
-  const documents = buildSessionDocuments(surface.events, coordinates)
-  const lastSeq = typeof surface.capturedThroughSeq === 'number' ? surface.capturedThroughSeq : 0
+  // Structural boundaries carry the authoritative Turn and Step numbers and
+  // are not surface nodes themselves, so they stay while replaced messages go.
+  const events = loaded.events.filter((event) => current.has(event.seq) || event.type === 'turn/start' || event.type === 'step/start')
+  const documents = buildSessionDocuments(events)
+  const lastSeq = loaded.events.length > 0 ? loaded.events[loaded.events.length - 1].seq : 0
   cacheDocumentList(sessionId, seq === null ? lastSeq : seq, documents)
   return documents
 }
