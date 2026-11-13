@@ -1,0 +1,50 @@
+{
+  "name": "@local/find-in-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Search the open DeepSeek Harness conversation and jump through matches newest first.",
+  "license": "MIT",
+  "author": "Timur Ziyangareev <timurziangareev@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Timur-Ziyangareev/find-in-chat.git"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "plugin",
+    "search",
+    "chat"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/search.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "docs/panel.png",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

@@ -1,0 +1,3 @@
+- insert:
+    - id: find-in-chat
+      name: '@local/find-in-chat'
