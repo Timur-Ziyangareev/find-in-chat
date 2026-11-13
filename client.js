@@ -52,6 +52,7 @@
           'panel.truncated': 'First {n} shown',
           'panel.jumping': 'Opening message…',
           'panel.keyHint': '↑↓ navigate · Enter jump · Esc close',
+          'filter.label': 'Filter by author',
           'kind.user': 'You',
           'kind.assistant': 'Assistant',
           'turn': 'Turn {n}',
@@ -75,6 +76,7 @@
           'panel.truncated': 'Показаны первые {n}',
           'panel.jumping': 'Открываю сообщение…',
           'panel.keyHint': '↑↓ выбор · Enter перейти · Esc закрыть',
+          'filter.label': 'Фильтр по автору',
           'kind.user': 'Вы',
           'kind.assistant': 'Ассистент',
           'turn': 'Ход {n}',
@@ -98,6 +100,7 @@
           'panel.truncated': '仅显示前 {n} 个',
           'panel.jumping': '正在打开消息…',
           'panel.keyHint': '↑↓ 选择 · Enter 跳转 · Esc 关闭',
+          'filter.label': '按作者筛选',
           'kind.user': '你',
           'kind.assistant': '助手',
           'turn': '第 {n} 轮',
@@ -163,6 +166,13 @@
         '.fic-icon-button:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
         '.fic-search{display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0 10px;height:34px;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-tertiary)}',
         '.fic-search:focus-within{border-color:var(--dsw-alias-state-business-primary)}',
+        '.fic-filters{display:flex;align-items:center;gap:6px;padding:0 12px 8px}',
+        '.fic-chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:.5px solid var(--dsw-alias-border-l2);border-radius:999px;background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;line-height:16px;cursor:pointer}',
+        '.fic-chip:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+        '.fic-chip[aria-pressed="true"]{border-color:var(--dsw-alias-border-l3);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
+        '.fic-chip:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}',
+        '.fic-chip-dot{width:5px;height:5px;border-radius:50%;flex:none}',
+        '.fic-chip[aria-pressed="false"] .fic-chip-dot{opacity:.35}',
         '.fic-input{flex:1;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:14px;line-height:20px}',
         '.fic-input::placeholder{color:var(--dsw-alias-label-tertiary)}',
         '.fic-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px 6px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}',
@@ -486,6 +496,10 @@
           var notice = noticeState[0];
           var setNotice = noticeState[1];
 
+          var kindsState = React.useState(['user', 'assistant']);
+          var kinds = kindsState[0];
+          var setKinds = kindsState[1];
+
           var spotState = React.useState(null);
           var spot = spotState[0];
           var setSpot = spotState[1];
@@ -548,6 +562,18 @@
             else openPanel();
           }
 
+          function toggleKind(kind) {
+            setKinds(function (current) {
+              var next = current.indexOf(kind) >= 0
+                ? current.filter(function (value) { return value !== kind; })
+                : current.concat(kind);
+              // One author must stay selected; clicking the last active chip
+              // is a no-op instead of an empty result list with no way back.
+              if (next.length === 0) return current;
+              return ['user', 'assistant'].filter(function (value) { return next.indexOf(value) >= 0; });
+            });
+          }
+
           React.useEffect(function () {
             if (!open) return;
             return function () {
@@ -589,6 +615,8 @@
             setResult(function (previous) {
               return { status: 'loading', hits: previous.hits, total: previous.total, truncated: previous.truncated, error: null };
             });
+            setSpot(null);
+            clearHighlights();
             var controller = null;
             try {
               controller = new AbortController();
@@ -597,7 +625,9 @@
             }
             var current = true;
             var timer = window.setTimeout(function () {
-              var url = '/find-in-chat/search?sessionId=' + encodeURIComponent(sessionId) + '&q=' + encodeURIComponent(text);
+              var url = '/find-in-chat/search?sessionId=' + encodeURIComponent(sessionId)
+                + '&kinds=' + encodeURIComponent(kinds.join(','))
+                + '&q=' + encodeURIComponent(text);
               var options = { headers: { accept: 'application/json' } };
               if (controller) options.signal = controller.signal;
               window.fetch(url, options)
@@ -629,7 +659,7 @@
               window.clearTimeout(timer);
               if (controller) controller.abort();
             };
-          }, [open, query, sessionId]);
+          }, [open, query, sessionId, kinds.join(',')]);
 
           // Panel geometry follows the header control.
           React.useLayoutEffect(function () {
@@ -827,6 +857,28 @@
             ]);
           }
 
+          function kindFilters() {
+            function chip(kind) {
+              var on = kinds.indexOf(kind) >= 0;
+              return h('button', {
+                key: kind,
+                type: 'button',
+                className: 'fic-chip',
+                'aria-pressed': on ? 'true' : 'false',
+                onClick: function () { toggleKind(kind); }
+              }, [
+                h('span', { className: 'fic-chip-dot fic-dot-' + kind, key: 'dot' }),
+                h('span', { key: 'label' }, copy('kind.' + kind))
+              ]);
+            }
+            return h('div', {
+              className: 'fic-filters',
+              key: 'filters',
+              role: 'group',
+              'aria-label': copy('filter.label')
+            }, [chip('user'), chip('assistant')]);
+          }
+
           function rowNode(hit, index) {
             var dotClass = 'fic-dot fic-dot-' + (hit.kind === 'user' ? 'user' : hit.kind === 'assistant' ? 'assistant' : 'tool');
             return h('button', {
@@ -902,6 +954,7 @@
                   onKeyDown: onInputKeyDown
                 })
               ]),
+              kindFilters(),
               metaLine(),
               notice ? h('div', { className: 'fic-notice', key: 'notice' }, notice) : null,
               h('div', { className: 'fic-list', key: 'list', ref: listRef, role: 'listbox', 'aria-label': copy('panel.title') },

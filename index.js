@@ -107,14 +107,25 @@ export function apply(ctx) {
         return
       }
 
+      const requestedKinds = (params.get('kinds') || 'user,assistant')
+        .split(',')
+        .map((kind) => kind.trim())
+        .filter((kind) => kind === 'user' || kind === 'assistant')
+      if (requestedKinds.length === 0) {
+        send(res, 400, { ok: false, error: { code: 'bad-kinds', message: 'Choose at least one author.' } })
+        return
+      }
+      const kinds = [...new Set(requestedKinds)]
+
       const started = Date.now()
       try {
         const documents = await documentsFor(ctx, sessionId)
-        const result = findMatches(documents, query)
+        const result = findMatches(documents, query, { kinds })
         send(res, 200, {
           ok: true,
           sessionId,
           query,
+          kinds,
           hits: result.hits,
           total: result.total,
           truncated: result.truncated,

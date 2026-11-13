@@ -102,6 +102,17 @@ check('hits are newest first and split per occurrence', () => {
   assert.equal(result.hits[0].match.toLowerCase(), 'lu')
 })
 
+check('kinds filter keeps only the selected authors', () => {
+  const documents = buildSessionDocuments([
+    turnStart(1, 1),
+    user(2, 'lu in a question'),
+    assistant(3, 1, 1, [{ type: 'text', text: 'lu in an answer' }]),
+  ])
+  assert.deepEqual(findMatches(documents, 'lu', { kinds: ['user'] }).hits.map((hit) => hit.kind), ['user'])
+  assert.deepEqual(findMatches(documents, 'lu', { kinds: ['assistant'] }).hits.map((hit) => hit.kind), ['assistant'])
+  assert.equal(findMatches(documents, 'lu', { kinds: ['user', 'assistant'] }).total, 2)
+})
+
 check('limit reports truncation', () => {
   const documents = buildSessionDocuments([user(2, 'a a a a a')])
   const result = findMatches(documents, 'a', { limit: 2 })
