@@ -102,7 +102,7 @@ check('hits are newest first and split per occurrence', () => {
   assert.equal(result.hits[0].match.toLowerCase(), 'lu')
 })
 
-check('kinds filter keeps only the selected authors', () => {
+check('kinds filter keeps only the selected result types', () => {
   const documents = buildSessionDocuments([
     turnStart(1, 1),
     user(2, 'lu in a question'),
@@ -120,22 +120,36 @@ check('limit reports truncation', () => {
   assert.equal(result.truncated, true)
 })
 
-check('tool results and tool-call arguments stay out of message results', () => {
+check('tool calls and tool results are searchable', () => {
   const documents = buildSessionDocuments([
     turnStart(1, 1),
     { type: 'tool/call', seq: 2, time: 1002, data: { turn: 1, step: 1, name: 'pwsh', arguments: '{"url":"https://lu-box"}' } },
     toolResult(3, 1, 1, 'opened https://lu-box'),
   ])
-  assert.equal(documents.length, 0)
-  assert.equal(findMatches(documents, 'lu').total, 0)
+  assert.equal(documents.length, 2)
+  assert.deepEqual(documents.map((document) => document.kind), ['tool', 'tool'])
+  assert.equal(findMatches(documents, 'lu-box').total, 2)
 })
 
-check('a message with only reasoning contributes nothing', () => {
+check('assistant reasoning is searchable and separate from the answer', () => {
+  const documents = buildSessionDocuments([
+    turnStart(1, 1),
+    assistant(2, 1, 1, [
+      { type: 'reasoning', text: 'thinking about lu-box' },
+      { type: 'text', text: 'the answer is lu-box' },
+    ]),
+  ])
+  assert.deepEqual(documents.map((document) => document.kind), ['reasoning', 'assistant'])
+  assert.deepEqual(findMatches(documents, 'lu-box').hits.map((hit) => hit.kind), ['assistant', 'reasoning'])
+})
+
+check('a message with only reasoning still contributes its thinking', () => {
   const documents = buildSessionDocuments([
     turnStart(1, 1),
     assistant(2, 1, 1, [{ type: 'reasoning', text: 'lu inside thinking' }]),
   ])
-  assert.equal(documents.length, 0)
+  assert.deepEqual(documents.map((document) => document.kind), ['reasoning'])
+  assert.equal(findMatches(documents, 'lu').total, 1)
 })
 
 console.log(`\n${passed} checks passed`)

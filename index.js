@@ -107,12 +107,12 @@ export function apply(ctx) {
         return
       }
 
-      const requestedKinds = (params.get('kinds') || 'user,assistant')
+      const requestedKinds = (params.get('kinds') || 'user,assistant,reasoning,tool')
         .split(',')
         .map((kind) => kind.trim())
-        .filter((kind) => kind === 'user' || kind === 'assistant')
+        .filter((kind) => kind === 'user' || kind === 'assistant' || kind === 'reasoning' || kind === 'tool')
       if (requestedKinds.length === 0) {
-        send(res, 400, { ok: false, error: { code: 'bad-kinds', message: 'Choose at least one author.' } })
+        send(res, 400, { ok: false, error: { code: 'bad-kinds', message: 'Choose at least one result type.' } })
         return
       }
       const kinds = [...new Set(requestedKinds)]

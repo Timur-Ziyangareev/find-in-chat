@@ -52,14 +52,18 @@
           'panel.truncated': 'First {n} shown',
           'panel.jumping': 'Opening message…',
           'panel.keyHint': '↑↓ navigate · Enter jump · Esc close',
-          'filter.label': 'Filter by author',
+          'filter.label': 'Filter results',
           'filter.all': 'All',
+          'filter.tools': 'Tools',
           'kind.user': 'You',
           'kind.assistant': 'Assistant',
+          'kind.reasoning': 'Thought',
+          'kind.tool': 'Tool',
           'turn': 'Turn {n}',
           'error.session': 'This chat is still opening.',
           'error.notFound': 'That message is not in the loaded history yet.',
           'error.jump': 'Could not open that message.',
+          'error.collapsed': 'This match is inside a collapsed step — expand it to see the highlight.',
           'error.network': 'The Host did not answer.'
         },
         ru: {
@@ -77,14 +81,18 @@
           'panel.truncated': 'Показаны первые {n}',
           'panel.jumping': 'Открываю сообщение…',
           'panel.keyHint': '↑↓ выбор · Enter перейти · Esc закрыть',
-          'filter.label': 'Фильтр по автору',
+          'filter.label': 'Фильтр результатов',
           'filter.all': 'Все',
+          'filter.tools': 'Инструменты',
           'kind.user': 'Вы',
           'kind.assistant': 'Ассистент',
+          'kind.reasoning': 'Рассуждение',
+          'kind.tool': 'Инструмент',
           'turn': 'Ход {n}',
           'error.session': 'Чат ещё открывается.',
           'error.notFound': 'Это сообщение ещё не загружено в чат.',
           'error.jump': 'Не удалось открыть сообщение.',
+          'error.collapsed': 'Совпадение внутри свёрнутого шага — раскройте его, чтобы увидеть подсветку.',
           'error.network': 'Хост не ответил.'
         },
         zh: {
@@ -102,14 +110,18 @@
           'panel.truncated': '仅显示前 {n} 个',
           'panel.jumping': '正在打开消息…',
           'panel.keyHint': '↑↓ 选择 · Enter 跳转 · Esc 关闭',
-          'filter.label': '按作者筛选',
+          'filter.label': '筛选结果',
           'filter.all': '全部',
+          'filter.tools': '工具',
           'kind.user': '你',
           'kind.assistant': '助手',
+          'kind.reasoning': '思考',
+          'kind.tool': '工具',
           'turn': '第 {n} 轮',
           'error.session': '聊天仍在打开。',
           'error.notFound': '该消息尚未加载到聊天中。',
           'error.jump': '无法打开该消息。',
+          'error.collapsed': '匹配位于折叠的步骤中 — 展开后即可看到高亮。',
           'error.network': '主机没有响应。'
         }
       };
@@ -169,8 +181,9 @@
         '.fic-icon-button:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}',
         '.fic-search{display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0 10px;height:34px;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-tertiary)}',
         '.fic-search:focus-within{border-color:var(--dsw-alias-state-business-primary)}',
-        '.fic-segments{display:inline-flex;align-items:center;gap:2px;align-self:flex-start;margin:0 12px 8px;padding:3px;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover)}',
-        '.fic-segment{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;line-height:16px;white-space:nowrap;cursor:pointer}',
+        '.fic-segments{display:inline-flex;align-items:center;gap:2px;align-self:flex-start;max-width:calc(100% - 24px);margin:0 12px 8px;padding:3px;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-interactive-bg-hover);overflow-x:auto;scrollbar-width:none}',
+        '.fic-segments::-webkit-scrollbar{display:none}',
+        '.fic-segment{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;line-height:16px;white-space:nowrap;cursor:pointer;flex:none}',
         '.fic-segment:hover{color:var(--dsw-alias-label-primary)}',
         '.fic-segment[aria-checked="true"]{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);box-shadow:var(--dsw-elevation-soft)}',
         '.fic-segment:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}',
@@ -190,6 +203,8 @@
         '.fic-dot{width:5px;height:5px;border-radius:50%;flex:none}',
         '.fic-dot-user{background:var(--dsw-alias-state-business-primary)}',
         '.fic-dot-assistant{background:#8a7cf0}',
+        '.fic-dot-reasoning{background:#b58b4a}',
+        '.fic-dot-tool{background:#8a8f98}',
         '.fic-sep{opacity:.5}',
         '.fic-snippet{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;font-size:13px;line-height:18px;color:var(--dsw-alias-label-secondary)}',
         '.fic-row[aria-selected="true"] .fic-snippet{color:var(--dsw-alias-label-primary)}',
@@ -348,7 +363,8 @@
         if (hit.kind === 'user' && typeof hit.messageId === 'string') {
           return contextKey('input-message', hit.messageId);
         }
-        if (hit.kind === 'assistant' && Number.isInteger(hit.turn) && Number.isInteger(hit.step)) {
+        if (hit.kind !== 'user' && Number.isInteger(hit.turn) && Number.isInteger(hit.step)) {
+          // Answers, reasoning, and tool rows live in the assistant step.
           return contextKey('assistant-step', String(hit.turn) + ':' + String(hit.step));
         }
         return null;
@@ -376,6 +392,7 @@
             var visible = exactRows.filter(isVisible);
             var fitting = visible.filter(holdsText);
             if (fitting.length > 0) return fitting[0];
+            if ((hit.kind === 'tool' || hit.kind === 'reasoning') && visible.length > 0) return visible[0];
           } catch (error) { /* fall through to the turn search */ }
         }
 
@@ -417,11 +434,12 @@
         });
       }
 
-      /** Map the three-way author selector to the Host's kinds list. */
-      function kindsForAuthor(author) {
-        if (author === 'user') return ['user'];
-        if (author === 'assistant') return ['assistant'];
-        return ['user', 'assistant'];
+      /** Map the four-way selector to the Host's result kinds. */
+      function kindsForScope(scope) {
+        if (scope === 'user') return ['user'];
+        if (scope === 'assistant') return ['assistant', 'reasoning'];
+        if (scope === 'tool') return ['tool'];
+        return ['user', 'assistant', 'reasoning', 'tool'];
       }
 
       function formatTime(value) {
@@ -506,9 +524,9 @@
           var notice = noticeState[0];
           var setNotice = noticeState[1];
 
-          var authorState = React.useState('all');
-          var author = authorState[0];
-          var setAuthor = authorState[1];
+          var scopeState = React.useState('all');
+          var scope = scopeState[0];
+          var setScope = scopeState[1];
 
           var spotState = React.useState(null);
           var spot = spotState[0];
@@ -624,7 +642,7 @@
             var current = true;
             var timer = window.setTimeout(function () {
               var url = '/find-in-chat/search?sessionId=' + encodeURIComponent(sessionId)
-                + '&kinds=' + encodeURIComponent(kindsForAuthor(author).join(','))
+                + '&kinds=' + encodeURIComponent(kindsForScope(scope).join(','))
                 + '&q=' + encodeURIComponent(text);
               var options = { headers: { accept: 'application/json' } };
               if (controller) options.signal = controller.signal;
@@ -657,7 +675,7 @@
               window.clearTimeout(timer);
               if (controller) controller.abort();
             };
-          }, [open, query, sessionId, author]);
+          }, [open, query, sessionId, scope]);
 
           // Panel geometry follows the header control.
           React.useLayoutEffect(function () {
@@ -781,6 +799,18 @@
                     if (jumpToken.current === token) showSpot(range);
                   }, 420);
                 }
+                var collapsed = false;
+                if (range) {
+                  try {
+                    var rect = range.getBoundingClientRect();
+                    collapsed = rect.width === 0 && rect.height === 0;
+                  } catch (error) {
+                    collapsed = true;
+                  }
+                }
+                if ((hit.kind === 'tool' || hit.kind === 'reasoning') && (range === null || collapsed)) {
+                  setNotice(copy('error.collapsed'));
+                }
                 setActive(index);
               })
               .catch(function (error) {
@@ -855,11 +885,12 @@
             ]);
           }
 
-          function authorFilter() {
+          function scopeFilter() {
             var options = [
               { id: 'all', label: copy('filter.all') },
               { id: 'user', label: copy('kind.user'), dot: 'user' },
-              { id: 'assistant', label: copy('kind.assistant'), dot: 'assistant' }
+              { id: 'assistant', label: copy('kind.assistant'), dot: 'assistant' },
+              { id: 'tool', label: copy('filter.tools'), dot: 'tool' }
             ];
             return h('div', {
               className: 'fic-segments',
@@ -867,14 +898,14 @@
               role: 'radiogroup',
               'aria-label': copy('filter.label')
             }, options.map(function (option) {
-              var checked = author === option.id;
+              var checked = scope === option.id;
               return h('button', {
                 key: option.id,
                 type: 'button',
                 role: 'radio',
                 className: 'fic-segment',
                 'aria-checked': checked ? 'true' : 'false',
-                onClick: function () { setAuthor(option.id); }
+                onClick: function () { setScope(option.id); }
               }, [
                 option.dot ? h('span', { className: 'fic-chip-dot fic-dot-' + option.dot, key: 'dot' }) : null,
                 h('span', { key: 'label' }, option.label)
@@ -883,9 +914,9 @@
           }
 
           function rowNode(hit, index) {
-            var dotClass = 'fic-dot fic-dot-' + (hit.kind === 'user' ? 'user' : hit.kind === 'assistant' ? 'assistant' : 'tool');
+            var dotClass = 'fic-dot fic-dot-' + (hit.kind === 'user' || hit.kind === 'assistant' || hit.kind === 'reasoning' ? hit.kind : 'tool');
             return h('button', {
-              key: String(hit.seq) + ':' + String(hit.occurrence),
+              key: String(hit.seq) + ':' + hit.kind + ':' + String(hit.occurrence),
               type: 'button',
               className: 'fic-row',
               role: 'option',
@@ -957,7 +988,7 @@
                   onKeyDown: onInputKeyDown
                 })
               ]),
-              authorFilter(),
+              scopeFilter(),
               metaLine(),              notice ? h('div', { className: 'fic-notice', key: 'notice' }, notice) : null,
               h('div', { className: 'fic-list', key: 'list', ref: listRef, role: 'listbox', 'aria-label': copy('panel.title') },
                 result.status === 'ready' && result.hits.length > 0
