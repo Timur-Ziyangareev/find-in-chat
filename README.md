@@ -28,9 +28,9 @@ Search covers the visible text of the whole open Session:
 - assistant reasoning blocks (**Thought**, grouped under Assistant);
 - `tool/call` names and arguments plus `tool/result` output and errors (**Tools**).
 
-Injected context, system prompts, and compaction checkpoints are not searched. A match inside a collapsed step still appears in the list; opening it scrolls to that step and the panel explains that the step must be expanded to see the highlight.
+Injected context, system prompts, and compaction checkpoints are not searched. A match inside a collapsed step still appears in the list; opening it scrolls to that step and the panel explains that the step must be expanded to see the highlight. Compacted messages stay searchable too: the result list marks them **Hidden** because Chat no longer renders them, so their snippet is the place to read the match.
 
-The Host reads the complete live log through `ctx.sessionQuery.readSession()` and asks `listEvents()` which records are still on the current surface, so replaced and shadowed messages are skipped while Turn and Step boundaries remain available. One parsed document list is cached per Session and rebuilt when the live log grows.
+The Host reads the complete live log through `ctx.sessionQuery.readSession()` and asks `listEvents()` which records were removed by a positional replacement. Removed records stay searchable and are marked Hidden; the others, including log-only records embedded in a step, can be opened in Chat. One parsed document list is cached per Session and rebuilt when the live log grows.
 
 ## Install
 
@@ -60,9 +60,9 @@ The browser calls the Host route with the current Session id. The Host returns h
 
 - Search is literal; tool output and reasoning are included, so a broad query can reach the 500-occurrence cap.
 - A match inside a collapsed tool or reasoning step is scrolled to, but its highlight becomes visible only after that step is expanded.
-- A search returns at most 500 occurrences and reports that the list was truncated.
+- A **Hidden** result comes from compacted history: it is found and previewed, but Chat no longer renders that row, so opening it shows the notice instead of a jump.
 - The history jump can take a moment when the match is far outside the loaded window; the panel shows “Opening message…” while it pages.
-- The Host re-reads the Session surface when the log grows, so a very large Session makes each new keystroke spend more time on the Host.
+- The Host re-reads the Session log when it grows, so a very large Session makes each new keystroke spend more time on the Host.
 - Matching is literal; regular expressions are not interpreted.
 
 ## Privacy
@@ -105,9 +105,9 @@ MIT
 - блоки рассуждений ассистента (**Рассуждение**, входят в «Ассистента»);
 - имена и аргументы вызовов (`tool/call`), вывод и ошибки инструментов (`tool/result`) — **Инструменты**.
 
-Внедрённый контекст, системные промпты и точки компакции не ищутся. Совпадение внутри свёрнутого шага всё равно попадает в список; при открытии чат прокручивается к шагу, а панель поясняет, что шаг нужно раскрыть для подсветки.
+Внедрённый контекст, системные промпты и точки компакции не ищутся. Совпадение внутри свёрнутого шага всё равно попадает в список; при открытии чат прокручивается к шагу, а панель поясняет, что шаг нужно раскрыть для подсветки. Сжатые сообщения тоже ищутся: они помечаются в списке как **Скрыто**, потому что чат их больше не отображает, и совпадение можно прочитать только в сниппете.
 
-Host читает полный живой журнал через `ctx.sessionQuery.readSession()` и запрашивает у `listEvents()`, какие записи ещё находятся на текущей поверхности. Поэтому заменённые и скрытые сообщения пропускаются, а границы ходов и шагов остаются доступны. Разобранный список документов кэшируется на сессию и перестраивается, когда журнал растёт.
+Host читает полный живой журнал через `ctx.sessionQuery.readSession()` и запрашивает у `listEvents()`, какие записи были удалены позиционной заменой. Удалённые записи остаются в поиске и помечаются как скрытые; остальные, включая log-only записи внутри шага, можно открыть в чате. Разобранный список документов кэшируется на сессию и перестраивается, когда журнал растёт.
 
 ### Установка
 
@@ -137,9 +137,9 @@ Host читает полный живой журнал через `ctx.sessionQu
 
 - Поиск буквальный; вывод инструментов и рассуждения включены, поэтому широкий запрос может упереться в лимит 500 совпадений.
 - Совпадение внутри свёрнутого шага с инструментом или рассуждением прокручивается к шагу, но подсветка появляется только после раскрытия шага.
-- Поиск возвращает не больше 500 совпадений и сообщает, что список обрезан.
+- Результат **Скрыто** пришёл из сжатой истории: он находится и показывается в сниппете, но чат больше не отображает эту строку, поэтому открытие показывает пояснение вместо перехода.
 - Догрузка истории может занять мгновение, если совпадение далеко за пределами загруженного окна; панель показывает «Открываю сообщение…».
-- Host перечитывает поверхность сессии при росте журнала, поэтому в очень большой сессии каждое новое нажатие клавиши тратит больше времени на Host.
+- Host перечитывает журнал сессии при его росте, поэтому в очень большой сессии каждое новое нажатие клавиши тратит больше времени на Host.
 - Совпадения буквальные; регулярные выражения не поддерживаются.
 
 ### Приватность
@@ -182,9 +182,9 @@ MIT
 - 助手的推理块（**思考**，归入“助手”）；
 - `tool/call` 的名称与参数，以及 `tool/result` 的输出和错误（**工具**）。
 
-注入的上下文、系统提示和压缩检查点不参与搜索。位于折叠步骤中的匹配仍会出现在列表里；打开时会滚动到该步骤，面板会提示需要展开步骤才能看到高亮。
+注入的上下文、系统提示和压缩检查点不参与搜索。位于折叠步骤中的匹配仍会出现在列表里；打开时会滚动到该步骤，面板会提示需要展开步骤才能看到高亮。已压缩的消息同样可以搜索：列表会将它们标记为 **已隐藏**，因为聊天不再显示它们，只能在预览中读取匹配内容。
 
-Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并用 `listEvents()` 确认哪些记录仍在当前表面上。因此被替换或隐藏的消息会被跳过，同时保留轮次和步骤边界。每个会话缓存一份解析后的文档列表，日志增长时重建。
+Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并用 `listEvents()` 确认哪些记录被位置替换删除。被删除的记录仍可搜索并标记为已隐藏；其余记录（包括步骤内的 log-only 记录）可以在聊天中打开。每个会话缓存一份解析后的文档列表，日志增长时重建。
 
 ### 安装
 
@@ -214,9 +214,9 @@ Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并�
 
 - 搜索是字面匹配；工具输出和推理也包含在内，因此宽泛的查询可能达到 500 条上限。
 - 位于折叠的工具或推理步骤中的匹配会滚动到该步骤，但展开步骤后才能看到高亮。
-- 单次最多返回 500 个匹配项，并会提示列表被截断。
+- **已隐藏** 的结果来自已压缩的历史：可以找到并预览，但聊天不再显示该行，打开时只显示提示而不会跳转。
 - 当匹配项远在已加载窗口之外时，加载历史可能需要一点时间；面板会显示“正在打开消息…”。
-- 日志增长时 Host 会重新读取会话表面，因此超大会话中每次按键在 Host 上的耗时都会增加。
+- 日志增长时 Host 会重新读取会话日志，因此超大会话中每次按键在 Host 上的耗时都会增加。
 - 匹配是字面匹配，不支持正则表达式。
 
 ### 隐私
