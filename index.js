@@ -15,6 +15,7 @@ export const inject = ['webServer', 'sessionQuery', 'sessions']
 
 const SESSION_ID_MAX = 200
 const QUERY_MAX = 200
+const TEXT_MAX = 200000
 const DOCUMENT_CACHE_LIMIT = 4
 const DOCUMENT_CACHE_TTL_MS = 5000
 
@@ -146,6 +147,56 @@ export function apply(ctx) {
       }
     },
   }), 'find-in-chat: search route')
+
+  // Full text for one result, used when Chat no longer renders a compacted row.
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact',
+    path: '/find-in-chat/text',
+    handler: async (req, res) => {
+      const params = queryOf(req)
+      if (params === null) {
+        send(res, 400, { ok: false, error: { code: 'bad-request', message: 'Malformed query string.' } })
+        return
+      }
+      const sessionId = (params.get('sessionId') || '').trim()
+      const seq = Number(params.get('seq'))
+      const kind = (params.get('kind') || '').trim()
+      const allowed = kind === 'user' || kind === 'assistant' || kind === 'reasoning' || kind === 'tool'
+      if (sessionId === '' || sessionId.length > SESSION_ID_MAX || !Number.isInteger(seq) || seq < 0 || !allowed) {
+        send(res, 400, { ok: false, error: { code: 'bad-text-request', message: 'A Session, seq, and kind are required.' } })
+        return
+      }
+
+      try {
+        const documents = await documentsFor(ctx, sessionId)
+        const matched = documents.filter((document) => document.seq === seq && document.kind === kind)
+        if (matched.length === 0) {
+          send(res, 404, { ok: false, error: { code: 'text-not-found', message: 'That result is no longer in the Session log.' } })
+          return
+        }
+        let text = matched.map((document) => document.text).join('\n\n')
+        const truncated = text.length > TEXT_MAX
+        if (truncated) text = text.slice(0, TEXT_MAX)
+        send(res, 200, {
+          ok: true,
+          text,
+          truncated,
+          kind,
+          turn: matched[0].turn,
+          step: matched[0].step,
+          jumpable: matched[0].jumpable !== false,
+        })
+      } catch (error) {
+        send(res, 500, {
+          ok: false,
+          error: {
+            code: 'text-failed',
+            message: error instanceof Error ? error.message : 'Could not read the Session.',
+          },
+        })
+      }
+    },
+  }), 'find-in-chat: result text route')
 
   // Lets the client and a quick `curl` tell whether the Host half is live.
   ctx.effect(() => ctx.webServer.register({

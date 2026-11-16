@@ -64,8 +64,14 @@
           'error.notFound': 'That message is not in the loaded history yet.',
           'error.jump': 'Could not open that message.',
           'error.collapsed': 'This match is inside a collapsed step — expand it to see the highlight.',
-          'error.compacted': 'This message is in compacted history — the chat no longer displays it, but the match is shown above.',
           'badge.hidden': 'Hidden',
+          'reader.title': 'Compacted message',
+          'reader.note': 'Chat no longer shows this row; the text comes from the Session log.',
+          'reader.truncated': 'Showing the first 200,000 characters.',
+          'reader.loading': 'Loading message…',
+          'reader.error': 'Could not load the message.',
+          'reader.copy': 'Copy',
+          'reader.copied': 'Copied',
           'error.network': 'The Host did not answer.'
         },
         ru: {
@@ -95,8 +101,14 @@
           'error.notFound': 'Это сообщение ещё не загружено в чат.',
           'error.jump': 'Не удалось открыть сообщение.',
           'error.collapsed': 'Совпадение внутри свёрнутого шага — раскройте его, чтобы увидеть подсветку.',
-          'error.compacted': 'Это сообщение в сжатой истории — чат его больше не показывает, но совпадение видно выше.',
           'badge.hidden': 'Скрыто',
+          'reader.title': 'Сжатое сообщение',
+          'reader.note': 'Чат больше не показывает эту строку; текст взят из журнала сессии.',
+          'reader.truncated': 'Показаны первые 200 000 символов.',
+          'reader.loading': 'Загружаю сообщение…',
+          'reader.error': 'Не удалось загрузить сообщение.',
+          'reader.copy': 'Копировать',
+          'reader.copied': 'Скопировано',
           'error.network': 'Хост не ответил.'
         },
         zh: {
@@ -126,8 +138,14 @@
           'error.notFound': '该消息尚未加载到聊天中。',
           'error.jump': '无法打开该消息。',
           'error.collapsed': '匹配位于折叠的步骤中 — 展开后即可看到高亮。',
-          'error.compacted': '该消息位于已压缩的历史中——聊天不再显示它，但上方仍能看到匹配内容。',
           'badge.hidden': '已隐藏',
+          'reader.title': '已压缩的消息',
+          'reader.note': '聊天不再显示该行；文本来自会话日志。',
+          'reader.truncated': '仅显示前 200,000 个字符。',
+          'reader.loading': '正在加载消息…',
+          'reader.error': '无法加载消息。',
+          'reader.copy': '复制',
+          'reader.copied': '已复制',
           'error.network': '主机没有响应。'
         }
       };
@@ -223,6 +241,19 @@
         '.fic-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;border-top:.5px solid var(--dsw-alias-border-l2);font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}',
         '.fic-foot span{overflow:hidden;text-overflow:ellipsis}',
         '.fic-spot{position:fixed;z-index:86;pointer-events:none;border:2px solid rgba(255,150,30,.9);border-radius:4px;box-shadow:0 0 0 3px rgba(255,178,36,.26),0 0 18px rgba(255,150,30,.36);transition:opacity .25s ease}',
+        '.fic-reader{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.28)}',
+        '.fic-reader-card{display:flex;flex-direction:column;width:min(720px,100%);max-height:min(72vh,640px);overflow:hidden;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary)}',
+        '.fic-reader-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:.5px solid var(--dsw-alias-border-l2)}',
+        '.fic-reader-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+        '.fic-reader-meta{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}',
+        '.fic-reader-body{flex:1;min-height:0;overflow:auto;padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}',
+        '.fic-reader-body mark{padding:0 1px;border-radius:3px;background:rgba(255,178,36,.55);color:inherit}',
+        '.fic-reader-state{padding:24px 14px;text-align:center;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
+        '.fic-reader-note{padding:8px 14px;border-top:.5px solid var(--dsw-alias-border-l2);font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}',
+        '.fic-reader-foot{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:.5px solid var(--dsw-alias-border-l2)}',
+        '.fic-reader-button{height:28px;padding:0 12px;border:0;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;cursor:pointer}',
+        '.fic-reader-button:hover{background:var(--dsw-alias-interactive-bg-active)}',
+        '.fic-reader-button[disabled]{cursor:default;opacity:.45}',
         '::highlight(fic-match){background-color:rgba(255,178,36,.36);color:inherit}',
         '::highlight(fic-match-active){background-color:rgba(255,150,30,.75);color:#1a1206}',
         '@media (prefers-reduced-motion: reduce){.fic-spinner{animation:none}}'
@@ -539,6 +570,14 @@
           var spot = spotState[0];
           var setSpot = spotState[1];
 
+          var readerState = React.useState(null);
+          var reader = readerState[0];
+          var setReader = readerState[1];
+
+          var readerCopiedState = React.useState(false);
+          var readerCopied = readerCopiedState[0];
+          var setReaderCopied = readerCopiedState[1];
+
           var wrapRef = React.useRef(null);
           var buttonRef = React.useRef(null);
           var inputRef = React.useRef(null);
@@ -546,6 +585,8 @@
           var tipTimer = React.useRef(0);
           var spotTimer = React.useRef(0);
           var jumpToken = React.useRef(0);
+          var readerToken = React.useRef(0);
+          var copiedTimer = React.useRef(0);
           var openRef = React.useRef(false);
           var resultRef = React.useRef(result);
 
@@ -569,7 +610,62 @@
             setTip(false);
             setNotice(null);
             setSpot(null);
+            closeReader();
             clearHighlights();
+          }
+
+          function closeReader() {
+            readerToken.current += 1;
+            setReader(null);
+            setReaderCopied(false);
+            if (copiedTimer.current) {
+              window.clearTimeout(copiedTimer.current);
+              copiedTimer.current = 0;
+            }
+          }
+
+          function openReader(hit) {
+            var token = readerToken.current + 1;
+            readerToken.current = token;
+            setReaderCopied(false);
+            setReader({ hit, status: 'loading', text: '', truncated: false });
+            var url = '/find-in-chat/text?sessionId=' + encodeURIComponent(sessionId)
+              + '&seq=' + encodeURIComponent(String(hit.seq))
+              + '&kind=' + encodeURIComponent(hit.kind);
+            window.fetch(url, { headers: { accept: 'application/json' } })
+              .then(function (response) {
+                return response.json().catch(function () { return null; }).then(function (body) {
+                  return { status: response.status, body };
+                });
+              })
+              .then(function (payload) {
+                if (readerToken.current !== token) return;
+                var body = payload.body;
+                if (!body || body.ok !== true) throw new Error(body && body.error && body.error.message ? body.error.message : 'HTTP ' + String(payload.status));
+                setReader({ hit, status: 'ready', text: body.text, truncated: body.truncated === true });
+              })
+              .catch(function () {
+                if (readerToken.current !== token) return;
+                setReader({ hit, status: 'error', text: '', truncated: false });
+              });
+          }
+
+          function copyReader() {
+            if (!reader || reader.status !== 'ready' || reader.text === '') return;
+            var text = reader.text;
+            function done() {
+              setReaderCopied(true);
+              if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+              copiedTimer.current = window.setTimeout(function () {
+                copiedTimer.current = 0;
+                setReaderCopied(false);
+              }, 1600);
+            }
+            try {
+              if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(text).then(done, function () { /* clipboard denied */ });
+              }
+            } catch (error) { /* clipboard unavailable */ }
           }
 
           function showSpot(range) {
@@ -614,12 +710,16 @@
             setActive(0);
             setNotice(null);
             setSpot(null);
+            setReader(null);
+            setReaderCopied(false);
+            readerToken.current += 1;
             clearHighlights();
           }, [sessionId]);
 
           React.useEffect(function () {
             return function () {
               if (spotTimer.current) window.clearTimeout(spotTimer.current);
+              if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
               clearHighlights();
             };
           }, []);
@@ -742,7 +842,8 @@
               if (event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
-                closePanel();
+                if (reader !== null) closeReader();
+                else closePanel();
               }
             }
             document.addEventListener('pointerdown', onPointerDown, true);
@@ -751,7 +852,7 @@
               document.removeEventListener('pointerdown', onPointerDown, true);
               document.removeEventListener('keydown', onKeyDown, true);
             };
-          }, [open]);
+          }, [open, reader !== null]);
 
           function moveActive(delta) {
             var hits = resultRef.current.hits;
@@ -775,7 +876,7 @@
             if (hit.jumpable === false) {
               setJumping(0);
               setActive(index);
-              setNotice(copy('error.compacted'));
+              openReader(hit);
               return;
             }
 
@@ -959,6 +1060,69 @@
             ]);
           }
 
+          function readerNode() {
+            if (reader === null) return null;
+            var hit = reader.hit;
+            var body;
+            if (reader.status === 'loading') {
+              body = h('div', { className: 'fic-reader-state', key: 'body' }, copy('reader.loading'));
+            } else if (reader.status === 'error') {
+              body = h('div', { className: 'fic-reader-state', key: 'body' }, copy('reader.error'));
+            } else {
+              var text = reader.text;
+              var start = typeof hit.matchIndex === 'number' ? hit.matchIndex : -1;
+              var length = typeof hit.matchLength === 'number' ? hit.matchLength : 0;
+              var content = [];
+              if (start >= 0 && start + length <= text.length && length > 0) {
+                content.push(text.slice(0, start));
+                content.push(h('mark', { key: 'match' }, text.slice(start, start + length)));
+                content.push(text.slice(start + length));
+              } else {
+                content.push(text);
+              }
+              body = h('div', { className: 'fic-reader-body', key: 'body' }, content);
+            }
+            return h('div', {
+              className: 'fic-reader',
+              key: 'reader',
+              role: 'dialog',
+              'aria-modal': 'true',
+              'aria-label': copy('reader.title'),
+              onMouseDown: function (event) { if (event.target === event.currentTarget) closeReader(); }
+            }, h('div', { className: 'fic-reader-card' }, [
+              h('div', { className: 'fic-reader-head', key: 'head' }, [
+                h('span', { className: 'fic-reader-title', key: 'title' }, copy('reader.title')),
+                h('span', { className: 'fic-reader-meta', key: 'meta' }, copy('kind.' + hit.kind) + ' · ' + copy('turn', { n: hit.turn })),
+                h('button', {
+                  key: 'close',
+                  type: 'button',
+                  className: 'fic-icon-button',
+                  'aria-label': copy('panel.close'),
+                  title: copy('panel.close'),
+                  onClick: closeReader
+                }, iconClose(14))
+              ]),
+              body,
+              reader.status === 'ready' && reader.truncated ? h('div', { className: 'fic-reader-note', key: 'truncated' }, copy('reader.truncated')) : null,
+              h('div', { className: 'fic-reader-note', key: 'note' }, copy('reader.note')),
+              h('div', { className: 'fic-reader-foot', key: 'foot' }, [
+                h('button', {
+                  key: 'copy',
+                  type: 'button',
+                  className: 'fic-reader-button',
+                  disabled: reader.status !== 'ready',
+                  onClick: copyReader
+                }, readerCopied ? copy('reader.copied') : copy('reader.copy')),
+                h('button', {
+                  key: 'close',
+                  type: 'button',
+                  className: 'fic-reader-button',
+                  onClick: closeReader
+                }, copy('panel.close'))
+              ])
+            ]));
+          }
+
           if (!sessionId) return null;
 
           var panel = null;
@@ -1046,7 +1210,8 @@
                 width: String(spot.width) + 'px',
                 height: String(spot.height) + 'px'
               }
-            }) : null
+            }) : null,
+            readerNode()
           ]);
         }
 
