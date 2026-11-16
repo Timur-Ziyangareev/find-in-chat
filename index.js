@@ -63,14 +63,13 @@ async function documentsFor(ctx, sessionId) {
     ctx.sessionQuery.readSession(sessionId),
     ctx.sessionQuery.listEvents(sessionId),
   ])
-  const current = new Set()
-  for (const record of records) {
-    if (record.surface === 'current') current.add(record.seq)
-  }
-  // Structural boundaries carry the authoritative Turn and Step numbers and
-  // are not surface nodes themselves, so they stay while replaced messages go.
-  const events = loaded.events.filter((event) => current.has(event.seq) || event.type === 'turn/start' || event.type === 'step/start')
-  const documents = buildSessionDocuments(events)
+  const surfaceBySeq = new Map()
+  for (const record of records) surfaceBySeq.set(record.seq, record.surface)
+  const documents = buildSessionDocuments(loaded.events)
+  // `shadowed` means positional replacement removed the record from the
+  // rendered transcript. `log-only` records (for example tool-call arguments
+  // inside an assistant message) are still shown inside their step.
+  for (const document of documents) document.jumpable = surfaceBySeq.get(document.seq) !== 'shadowed'
   const lastSeq = loaded.events.length > 0 ? loaded.events[loaded.events.length - 1].seq : 0
   cacheDocumentList(sessionId, seq === null ? lastSeq : seq, documents)
   return documents

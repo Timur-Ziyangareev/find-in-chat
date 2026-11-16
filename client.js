@@ -64,6 +64,8 @@
           'error.notFound': 'That message is not in the loaded history yet.',
           'error.jump': 'Could not open that message.',
           'error.collapsed': 'This match is inside a collapsed step — expand it to see the highlight.',
+          'error.compacted': 'This message is in compacted history — the chat no longer displays it, but the match is shown above.',
+          'badge.hidden': 'Hidden',
           'error.network': 'The Host did not answer.'
         },
         ru: {
@@ -93,6 +95,8 @@
           'error.notFound': 'Это сообщение ещё не загружено в чат.',
           'error.jump': 'Не удалось открыть сообщение.',
           'error.collapsed': 'Совпадение внутри свёрнутого шага — раскройте его, чтобы увидеть подсветку.',
+          'error.compacted': 'Это сообщение в сжатой истории — чат его больше не показывает, но совпадение видно выше.',
+          'badge.hidden': 'Скрыто',
           'error.network': 'Хост не ответил.'
         },
         zh: {
@@ -122,6 +126,8 @@
           'error.notFound': '该消息尚未加载到聊天中。',
           'error.jump': '无法打开该消息。',
           'error.collapsed': '匹配位于折叠的步骤中 — 展开后即可看到高亮。',
+          'error.compacted': '该消息位于已压缩的历史中——聊天不再显示它，但上方仍能看到匹配内容。',
+          'badge.hidden': '已隐藏',
           'error.network': '主机没有响应。'
         }
       };
@@ -206,6 +212,7 @@
         '.fic-dot-reasoning{background:#b58b4a}',
         '.fic-dot-tool{background:#8a8f98}',
         '.fic-sep{opacity:.5}',
+        '.fic-hidden{margin-left:auto;padding:0 4px;border-radius:4px;background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);font-size:10px;line-height:14px}',
         '.fic-snippet{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;font-size:13px;line-height:18px;color:var(--dsw-alias-label-secondary)}',
         '.fic-row[aria-selected="true"] .fic-snippet{color:var(--dsw-alias-label-primary)}',
         '.fic-snippet mark{padding:0 1px;border-radius:3px;background:rgba(255,178,36,.34);color:inherit}',
@@ -765,6 +772,13 @@
             setNotice(null);
             setSpot(null);
 
+            if (hit.jumpable === false) {
+              setJumping(0);
+              setActive(index);
+              setNotice(copy('error.compacted'));
+              return;
+            }
+
             var binding = null;
             try {
               binding = sessions.binding(sessionId);
@@ -934,7 +948,8 @@
                 h('span', { className: 'fic-sep', key: 'sep1' }, '·'),
                 h('span', { key: 'turn' }, copy('turn', { n: hit.turn })),
                 h('span', { className: 'fic-sep', key: 'sep2' }, '·'),
-                h('span', { key: 'time' }, formatTime(hit.time))
+                h('span', { key: 'time' }, formatTime(hit.time)),
+                hit.jumpable === false ? h('span', { className: 'fic-hidden', key: 'hidden' }, copy('badge.hidden')) : null
               ]),
               h('div', { className: 'fic-snippet', key: 'snippet' }, [
                 hit.before,
