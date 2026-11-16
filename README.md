@@ -11,7 +11,7 @@ A search control in the conversation header. It searches the **whole open sessio
 - One magnifier button in the conversation header, next to the Session utilities.
 - Literal, case-insensitive search; whitespace in the query matches any whitespace run, so `lu box` finds `lu\nbox`.
 - Results are one row per occurrence, newest first, with the message kind, Turn, time, and a two-line preview around the match.
-- A three-way selector — **All**, **You**, **Assistant** — chooses which author stays in the results; **All** is the default. The Host applies it before the 500-hit cap, so narrowing the author never hides the remaining matches.
+- A four-way selector — **All**, **You**, **Assistant**, **Tools** — chooses what stays in the results; **All** is the default. **Assistant** covers answers and reasoning, **Tools** covers tool calls and their output. The Host applies the choice before the 500-hit cap, so narrowing it never hides the remaining matches.
 - `↑` / `↓` move through the list, `Enter` opens the active match, a click opens any row.
 - The Chat is asked to load the missing history window before the jump, so matches in old Turns work too.
 - The matched text is highlighted with the CSS Custom Highlight API, and a short-lived ring marks the exact spot (it stays visible even inside inline code, where a highlight would sit under the code background).
@@ -21,12 +21,14 @@ A search control in the conversation header. It searches the **whole open sessio
 
 ## What is searched
 
-Only text the user can see as an ordinary Chat row:
+Search covers the visible text of the whole open Session:
 
-- human `user/message` entries;
-- the text blocks of `assistant/message` answers.
+- human `user/message` entries (**You**);
+- `assistant/message` answers (**Assistant**);
+- assistant reasoning blocks (**Thought**, grouped under Assistant);
+- `tool/call` names and arguments plus `tool/result` output and errors (**Tools**).
 
-Reasoning, tool calls and tool outputs, injected context, system prompts, and compaction checkpoints are not searched. This keeps every result addressable in the Chat and avoids turning a short query into hundreds of tool-output fragments.
+Injected context, system prompts, and compaction checkpoints are not searched. A match inside a collapsed step still appears in the list; opening it scrolls to that step and the panel explains that the step must be expanded to see the highlight.
 
 The Host reads the complete live log through `ctx.sessionQuery.readSession()` and asks `listEvents()` which records are still on the current surface, so replaced and shadowed messages are skipped while Turn and Step boundaries remain available. One parsed document list is cached per Session and rebuilt when the live log grows.
 
@@ -56,7 +58,8 @@ The browser calls the Host route with the current Session id. The Host returns h
 
 ## Limits
 
-- Messages only, by design; see [What is searched](#what-is-searched).
+- Search is literal; tool output and reasoning are included, so a broad query can reach the 500-occurrence cap.
+- A match inside a collapsed tool or reasoning step is scrolled to, but its highlight becomes visible only after that step is expanded.
 - A search returns at most 500 occurrences and reports that the list was truncated.
 - The history jump can take a moment when the match is far outside the loaded window; the panel shows “Opening message…” while it pages.
 - The Host re-reads the Session surface when the log grows, so a very large Session makes each new keystroke spend more time on the Host.
@@ -85,7 +88,7 @@ MIT
 - Кнопка с лупой в шапке чата, рядом с остальными действиями сессии.
 - Поиск буквальный, без учёта регистра; пробелы в запросе совпадают с любым набором пробельных символов, поэтому `lu box` находит `lu\nbox`.
 - Каждая строка списка — одно совпадение, сначала самые новые; видны тип сообщения, ход, время и две строки контекста вокруг найденного текста.
-- Переключатель на три положения — **Все**, **Вы**, **Ассистент** — выбирает, чьи сообщения оставить в результатах; по умолчанию **Все**. Host применяет выбор до лимита в 500 совпадений, поэтому сужение автора не прячет оставшиеся совпадения.
+- Переключатель на четыре положения — **Все**, **Вы**, **Ассистент**, **Инструменты** — выбирает, что оставить в результатах; по умолчанию **Все**. **Ассистент** включает ответы и рассуждения, **Инструменты** — вызовы и вывод инструментов. Host применяет выбор до лимита в 500 совпадений, поэтому сужение не прячет оставшиеся совпадения.
 - `↑` / `↓` листают список, `Enter` открывает выбранное совпадение, клик открывает любую строку.
 - Перед переходом Chat догружает недостающую часть истории, поэтому работают и совпадения в старых ходах.
 - Найденный текст подсвечивается через CSS Custom Highlight, а точное место на короткое время обводится рамкой — её видно даже внутри inline-кода, где обычная подсветка уходит под фон плашки.
@@ -95,12 +98,14 @@ MIT
 
 ### Что ищется
 
-Только текст, который пользователь видит обычной строкой чата:
+Поиск идёт по видимому тексту всей открытой сессии:
 
-- сообщения пользователя (`user/message`);
-- текстовые блоки ответов ассистента (`assistant/message`).
+- сообщения пользователя (`user/message`, **Вы**);
+- ответы ассистента (`assistant/message`, **Ассистент**);
+- блоки рассуждений ассистента (**Рассуждение**, входят в «Ассистента»);
+- имена и аргументы вызовов (`tool/call`), вывод и ошибки инструментов (`tool/result`) — **Инструменты**.
 
-Рассуждения, вызовы и результаты инструментов, внедрённый контекст, системные промпты и точки компакции не ищутся. Так каждый результат можно показать в чате, а короткий запрос не превращается в сотни фрагментов вывода инструментов.
+Внедрённый контекст, системные промпты и точки компакции не ищутся. Совпадение внутри свёрнутого шага всё равно попадает в список; при открытии чат прокручивается к шагу, а панель поясняет, что шаг нужно раскрыть для подсветки.
 
 Host читает полный живой журнал через `ctx.sessionQuery.readSession()` и запрашивает у `listEvents()`, какие записи ещё находятся на текущей поверхности. Поэтому заменённые и скрытые сообщения пропускаются, а границы ходов и шагов остаются доступны. Разобранный список документов кэшируется на сессию и перестраивается, когда журнал растёт.
 
@@ -130,7 +135,8 @@ Host читает полный живой журнал через `ctx.sessionQu
 
 ### Ограничения
 
-- Только сообщения, по замыслу; см. раздел «Что ищется».
+- Поиск буквальный; вывод инструментов и рассуждения включены, поэтому широкий запрос может упереться в лимит 500 совпадений.
+- Совпадение внутри свёрнутого шага с инструментом или рассуждением прокручивается к шагу, но подсветка появляется только после раскрытия шага.
 - Поиск возвращает не больше 500 совпадений и сообщает, что список обрезан.
 - Догрузка истории может занять мгновение, если совпадение далеко за пределами загруженного окна; панель показывает «Открываю сообщение…».
 - Host перечитывает поверхность сессии при росте журнала, поэтому в очень большой сессии каждое новое нажатие клавиши тратит больше времени на Host.
@@ -159,7 +165,7 @@ MIT
 - 会话标题栏中的一个放大镜按钮，位于会话操作区。
 - 字面匹配、不区分大小写；查询中的空白可匹配任意空白，因此 `lu box` 能找到 `lu\nbox`。
 - 列表每一行是一个匹配项，最新的在前，显示消息类型、轮次、时间和匹配处周围的两行预览。
-- 三档选择器 **全部 / 你 / 助手**，决定结果中保留谁的消息；默认 **全部**。Host 在 500 条上限之前应用筛选，因此缩小作者范围不会隐藏其余匹配。
+- 四档选择器 **全部 / 你 / 助手 / 工具**，决定结果中保留什么；默认 **全部**。**助手** 包含回答和推理，**工具** 包含工具调用与输出。Host 在 500 条上限之前应用筛选，因此缩小范围不会隐藏其余匹配。
 - `↑` / `↓` 在列表中移动，`Enter` 打开当前匹配项，点击任意行也可以打开。
 - 跳转前会让 Chat 加载缺失的历史窗口，因此旧轮次中的匹配也能打开。
 - 匹配文本用 CSS Custom Highlight 标出，并用一个短暂的圆角框圈出准确位置——即使匹配位于行内代码中，高亮会被代码底色盖住，圆角框仍然可见。
@@ -169,12 +175,14 @@ MIT
 
 ### 搜索范围
 
-只搜索用户能在 Chat 中看到的普通消息：
+搜索覆盖整个打开会话中可见的文本：
 
-- 用户的 `user/message` 消息；
-- 助手回答中的文本块（`assistant/message`）。
+- 用户的 `user/message` 消息（**你**）；
+- 助手的 `assistant/message` 回答（**助手**）；
+- 助手的推理块（**思考**，归入“助手”）；
+- `tool/call` 的名称与参数，以及 `tool/result` 的输出和错误（**工具**）。
 
-推理内容、工具调用与工具输出、注入的上下文、系统提示和压缩检查点不参与搜索。这样每个结果都能在 Chat 中定位，短查询也不会变成数百条工具输出片段。
+注入的上下文、系统提示和压缩检查点不参与搜索。位于折叠步骤中的匹配仍会出现在列表里；打开时会滚动到该步骤，面板会提示需要展开步骤才能看到高亮。
 
 Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并用 `listEvents()` 确认哪些记录仍在当前表面上。因此被替换或隐藏的消息会被跳过，同时保留轮次和步骤边界。每个会话缓存一份解析后的文档列表，日志增长时重建。
 
@@ -204,7 +212,8 @@ Host 通过 `ctx.sessionQuery.readSession()` 读取完整的实时日志，并�
 
 ### 限制
 
-- 按设计只搜索消息；见“搜索范围”。
+- 搜索是字面匹配；工具输出和推理也包含在内，因此宽泛的查询可能达到 500 条上限。
+- 位于折叠的工具或推理步骤中的匹配会滚动到该步骤，但展开步骤后才能看到高亮。
 - 单次最多返回 500 个匹配项，并会提示列表被截断。
 - 当匹配项远在已加载窗口之外时，加载历史可能需要一点时间；面板会显示“正在打开消息…”。
 - 日志增长时 Host 会重新读取会话表面，因此超大会话中每次按键在 Host 上的耗时都会增加。
